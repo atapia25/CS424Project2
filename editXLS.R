@@ -21,9 +21,10 @@ egrid2018v3 <- subset(egrid2018v3, Hydro > 0 | Coal > 0 | Gas > 0 | Oil > 0 |
 
 egrid2018v4 <- subset(egrid2018v2, value > 0)
 
+#colorFactors is used for mapping the types of energy sources
 colorFactors <- colorFactor(c("red", "black", "#0072B2", "#E69F00", "#56B4E9",
                               "#CC79A7", "#D55E00", "#009E73", "#F0E442", "#999999"),
-                            domain = egrid2018v4$Type)
+                            domain = type)
 
 map_color <- c("Biomass" = "red", "Coal" = "black", "Gas" = "#0072B2",
                "Geothermal" = "#E69F00", "Hydro" = "#56B4E9", 
@@ -35,8 +36,7 @@ egrid2018IL <- subset(egrid2018v4, State == "IL")
 icons <- awesomeIcons(
   icon = 'ios-close',
   iconColor = colorFactors(egrid2018v4$Type),
-  library = 'ion',
-  markerColor = 'white'
+  markerColor = 'blue'
 )
 
 ## Circle Markers work for now, but I would like to use Awesome Markers because it

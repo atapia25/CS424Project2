@@ -30,6 +30,8 @@ colorFactors <- colorFactor(c("red", "black", "#0072B2", "#E69F00", "#56B4E9",
 
 egrid2018IL <- subset(egrid2018v4, State == "IL")
 
+energy <- levels(type)
+
 years <- c(2000, 2010, 2018)
 
 ui <- dashboardPage(
@@ -38,23 +40,80 @@ ui <- dashboardPage(
                      #for the menu on the left hand side
                      sidebarMenu(
                        menuItem("Map of Illinois 2018", tabName = "task1"),
+                       menuItem("State Comparison", tabName = "task2"),
                        menuItem("About", tabName = "about")
                      )
     ),
-    dashboardBody(leafletOutput("leaf2018IL"))
+    dashboardBody(
+      tabItem(tabName = "task1",
+        column(2,
+               fluidRow(
+                checkboxGroupInput("checkGroup1",
+                                   "Select the types of plants to view",
+                                   choices = c("All", "Renewable", 
+                                               "Nonrenewable", energy),
+                                   selected = "All") 
+                )
+              ),
+        column(10,
+               fluidRow(
+                 box(title = "Map of Illinois in 2018", solidHeader = TRUE, status = "primary", width = 12,
+                     leafletOutput("leaf2018IL", height = 800)
+                  )
+                )
+              )
+            )
+        )
 )
 
 server <- function(input, output, session) {
   
+  
+  
+  #Illinois map
+  ILReactive <- reactive({subset(egrid2018IL, egrid2018IL$Type %in% 
+                                   input$checkGroup1)})
+  
   output$leaf2018IL <- renderLeaflet({
-    map <- leaflet(egrid2018IL)
+    ILMap <- ILReactive()
+    if(input$checkGroup1 == "All")
+    {
+      #if the user just has All selected
+      updateCheckboxGroupInput(session, "checkGroup1", 
+                               selected = c("All", "Renewable", 
+                                            "Nonrenewable", energy))
+    }
+    if(input$checkGroup1 == "Renewable" & input$checkGroup1 == "Nonrenewable")
+    {
+      updateCheckboxGroupInput(session, "checkGroup1",
+                               selected = c("Renewable", "Nonrenewable",
+                                            energy))
+    }
+    else
+    {
+      if(input$checkGroup1 == "Renewable")
+      {
+        updateCheckboxGroupInput(session, "checkGroup1",
+                                 selected = c("Renewable", 
+                                              "Biomass", "Geothermal",
+                                              "Solar", "Wind"))
+      }
+      else if(input$checkGroup1 == "Nonrenewable")
+      {
+        updateCheckboxGroupInput(session, "checkGroup1",
+                                 selected = c("Nonrenewable",
+                                              "coal", "Gas", "Hydro", "Nuclear",
+                                              "Oil", "Other"))
+      }
+    }
+    map <- leaflet(ILMap)
     map <- addTiles(map)
     map <- addCircles(map,
-                      lng = egrid2018IL$Longitude,
-                      lat = egrid2018IL$Latitude,
-                      color = colorFactors(egrid2018IL$Type))
+                      lng = ILMap$Longitude,
+                      lat = ILMap$Latitude,
+                      color = colorFactors(ILMap$Type))
     map <- addResetMapButton(map)
-    map <- addLegend(map, "topright", colorFactors, values = egrid2018IL$Type)
+    map <- addLegend(map, "topright", colorFactors, values = ILMap$Type)
     map
   })
   
