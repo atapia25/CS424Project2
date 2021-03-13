@@ -129,7 +129,9 @@ ui <- navbarPage("CS 424 Project Two",
                selectInput("state3", "Select a state to view", c("All", allStates),
                            selected = "All"),
                checkboxGroupInput("checkGroupUS", "Select which energy source
-                                  to view", c("All", energy))
+                                  to view", c("All", energy)),
+               h2("Do not worry if you see an error on the right screen. Select
+                  one of the energy choices to display the leaflet map.")
              )
           ),
       column(10,
@@ -206,11 +208,11 @@ server <- function(input, output, session) {
   PlantReactive2018 <- reactive({
     if (input$state3 == "All")
     {
-      egrid2010v3[egrid2018v3$Type %in% input$checkGroupUS,]
+      egrid2018v3[egrid2018v3$Type %in% input$checkGroupUS,]
     }
     else
     {
-      egrid2010v3[egrid2018v3$State == states[[input$state3]]
+      egrid2018v3[egrid2018v3$State == states[[input$state3]]
                   & egrid2018v3$Type %in% input$checkGroupUS,]
     }
   })
