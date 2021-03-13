@@ -121,17 +121,43 @@ ui <- navbarPage("CS 424 Project Two",
                                   selected = "All")
              )
           )
-      )
+      ),
+    tabPanel("US Map",
+      column(2,
+             fluidRow(
+               selectInput("year3", "Select a year to view", years),
+               selectInput("state3", "Select a state to view", c("All", allStates),
+                           selected = "All"),
+               checkboxGroupInput("checkGroupUS", "Select which energy source
+                                  to view", c("All", energy))
+             )
+          ),
+      column(10,
+             fluidRow(
+               leafletOutput("leafTotal", height = 800)
+             )
+          )
+    ),
+    tabPanel("About",
+             h1("Information about data"),
+             p("The data"),
+             br(),
+             h2("Author of code"),
+             p("The code for this Shiny App was written by Andres Tapia. At the time of this release,
+              I am currently in my second semester of my third year at the University of Illinois
+              at Chicago.")
+        )
 )
 
 server <- function(input, output, session) {
   
   
-  
+  ### Part 1 Data ###
   #Illinois map
   ILReactive <- reactive({subset(egrid2018IL, egrid2018IL$Type %in% 
                                    input$checkGroup1)})
   
+  ### Part 2 Data ###
   #Left half of the screen
   LeftReactive2000 <- reactive({egrid2000v3[egrid2000v3$State == states[[input$state1]]
                                             & egrid2000v3$Type %in% input$checkGroupLeft,]})
@@ -152,6 +178,45 @@ server <- function(input, output, session) {
   RightReactive2018 <- reactive({egrid2018v3[egrid2018v3$State == states[[input$state2]]
                                              & egrid2018v3$Type %in% input$checkGroupRight,]})
   
+  ### Part 3 Data ###
+  PlantReactive2000 <- reactive({
+    if (input$state3 == "All")
+    {
+      egrid2000v3[egrid2000v3$Type %in% input$checkGroupUS,]
+    }
+    else
+    {
+      egrid2000v3[egrid2000v3$State == states[[input$state3]]
+                  & egrid2000v3$Type %in% input$checkGroupUS,]
+    }
+  })
+  
+  PlantReactive2010 <- reactive({
+    if (input$state3 == "All")
+    {
+      egrid2010v3[egrid2010v3$Type %in% input$checkGroupUS,]
+    }
+    else
+    {
+      egrid2010v3[egrid2010v3$State == states[[input$state3]]
+                  & egrid2010v3$Type %in% input$checkGroupUS,]
+    }
+  })
+  
+  PlantReactive2018 <- reactive({
+    if (input$state3 == "All")
+    {
+      egrid2010v3[egrid2018v3$Type %in% input$checkGroupUS,]
+    }
+    else
+    {
+      egrid2010v3[egrid2018v3$State == states[[input$state3]]
+                  & egrid2018v3$Type %in% input$checkGroupUS,]
+    }
+  })
+  ### ####
+  
+  #This is for the left part of the screen
   datasetInput1 <- reactive({
     if (input$year1 == 2000)
     {
@@ -185,6 +250,24 @@ server <- function(input, output, session) {
     return(dataset)
   })
   
+  #This is for the third task which is to output the data for the whole US
+  datasetInput3 <- reactive({
+    if (input$year3 == 2000)
+    {
+      dataset <- PlantReactive2000()
+    }
+    else if (input$year3 == 2010)
+    {
+      dataset <- PlantReactive2010()
+    }
+    else if (input$year3 == 2018)
+    {
+      dataset <- PlantReactive2018()
+    }
+    return(dataset)
+  })
+  
+  ### Illinois Map ###
   output$leaf2018IL <- renderLeaflet({
     ILMap <- ILReactive()
     if(input$checkGroup1 == "All")
@@ -228,6 +311,7 @@ server <- function(input, output, session) {
     map
   })
   
+  #Left 
   output$leafLeft <- renderLeaflet({
     plantData <- datasetInput1()
     if(input$checkGroupLeft == "All")
@@ -250,6 +334,7 @@ server <- function(input, output, session) {
     map
   })
   
+  #Right half of split screen
   output$leafRight <- renderLeaflet({
     plantData <- datasetInput2()
     if(input$checkGroupRight == "All")
@@ -263,6 +348,28 @@ server <- function(input, output, session) {
                       lng = plantData$Longitude,
                       lat = plantData$Latitude,
                       radius = (plantData$value * 0.001),
+                      color = colorFactors(plantData$Type),
+                      popup = paste("Value:", plantData$value, "MWh <br>",
+                                    "Name:", plantData$Name, "<br>",
+                                    "Type of Energy:", plantData$Type))
+    map <- addResetMapButton(map)
+    map <- addLegend(map, "topright", colorFactors, values = plantData$Type)
+    map
+  })
+  
+  #For the total US
+  output$leafTotal <- renderLeaflet({
+    plantData <- datasetInput3()
+    if(input$checkGroupUS == "All")
+    {
+      updateCheckboxGroupInput(session, "checkGroupUS", 
+                               selected = c("All", energy))
+    }
+    map <- leaflet(plantData)
+    map <- addTiles(map)
+    map <- addCircles(map,
+                      lng = plantData$Longitude,
+                      lat = plantData$Latitude,
                       color = colorFactors(plantData$Type),
                       popup = paste("Value:", plantData$value, "MWh <br>",
                                     "Name:", plantData$Name, "<br>",
