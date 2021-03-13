@@ -242,8 +242,9 @@ server <- function(input, output, session) {
                       lat = plantData$Latitude,
                       radius = (plantData$value * 0.001),
                       color = colorFactors(plantData$Type),
-                      popup = paste("Value:", plantData$value, "<br>",
-                                    "Name:", plantData$Name, "<br>"))
+                      popup = paste("Value:", plantData$value, "MWh <br>",
+                                    "Name:", plantData$Name, "<br>",
+                                    "Type of Energy:", plantData$Type))
     map <- addResetMapButton(map)
     map <- addLegend(map, "topright", colorFactors, values = plantData$Type)
     map
@@ -262,7 +263,10 @@ server <- function(input, output, session) {
                       lng = plantData$Longitude,
                       lat = plantData$Latitude,
                       radius = (plantData$value * 0.001),
-                      color = colorFactors(plantData$Type))
+                      color = colorFactors(plantData$Type),
+                      popup = paste("Value:", plantData$value, "MWh <br>",
+                                    "Name:", plantData$Name, "<br>",
+                                    "Type of Energy:", plantData$Type))
     map <- addResetMapButton(map)
     map <- addLegend(map, "topright", colorFactors, values = plantData$Type)
     map
