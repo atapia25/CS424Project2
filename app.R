@@ -1,6 +1,6 @@
 #NOTE: File must be saved in UTF-8 encoding to properly work
 library(shiny)
-library(farver)
+#library(farver)
 library(leaflet)
 library(leaflet.extras)
 library(dplyr)
@@ -83,9 +83,7 @@ ui <- navbarPage("CS 424 Project Two",
               ),
         column(10,
                fluidRow(
-                 box(title = "Map of Illinois in 2018", solidHeader = TRUE, status = "primary", width = 12,
                      leafletOutput("leaf2018IL", height = 800)
-                  )
                 )
               )
             ),
@@ -156,7 +154,15 @@ ui <- navbarPage("CS 424 Project Two",
     tabPanel("About",
              h1("Information about data"),
              p("The data consists of data on electrical power generation
-               throughout the US. The data is taken from the EPA"),
+               throughout the US. The data is taken from the EPA website which
+               can be found in this ",
+               a("link.",
+                 href = "https://www.epa.gov/egrid/download-data")),
+             br(),
+             p("The datasets that were specifically taken were from 2000, 2010,
+               and 2018. The specific files needed are eGRID2018v2.xlsx,
+               eGRID2000_plant.xls and eGRID2010_plant.xls. The latter two
+               are in a .zip file"),
              br(),
              h2("Author of code"),
              p("The code for this Shiny App was written by Andres Tapia. At the time of this release,
@@ -292,6 +298,7 @@ server <- function(input, output, session) {
     return(dataset)
   })
   
+  #This links the two checkboxes
   observe({
     x <- input$linker
     if(isTRUE(x))
