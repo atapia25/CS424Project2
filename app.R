@@ -100,7 +100,9 @@ ui <- navbarPage("CS 424 Project Two",
                            c("Default", "Gray", "Color"), selected = "Default"),
                checkboxGroupInput("checkGroupLeft", "Select which energy
                                   source to view", c("All", energy),
-                                  selected = "All")
+                                  selected = "All"),
+               checkboxInput("linker", "Check to link the checkboxes on left
+                             and right", value = FALSE)
              )
           ),
       column(5,
@@ -288,6 +290,15 @@ server <- function(input, output, session) {
       dataset <- PlantReactive2018()
     }
     return(dataset)
+  })
+  
+  observe({
+    x <- input$linker
+    if(isTRUE(x))
+    {
+      updateCheckboxGroupInput(session, "checkGroupRight", 
+                               selected = input$checkGroupLeft)
+    }
   })
   
   ### Illinois Map ###
