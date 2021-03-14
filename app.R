@@ -95,6 +95,8 @@ ui <- navbarPage("CS 424 Project Two",
                            selected = 2000),
                selectInput("state1", "Select a state to view", allStates,
                            selected = "Illinois"),
+               selectInput("mapType1", "Select a type of map to view",
+                           c("Default", "Gray", "Color"), selected = "Default"),
                checkboxGroupInput("checkGroupLeft", "Select which energy
                                   source to view", c("All", energy),
                                   selected = "All")
@@ -116,6 +118,8 @@ ui <- navbarPage("CS 424 Project Two",
                            selected = 2018),
                selectInput("state2", "Select a state to view", allStates,
                            selected = "Illinois"),
+               selectInput("mapType2", "Select a type of map to view",
+                           c("Default", "Gray", "Color"), selected = "Default"),
                checkboxGroupInput("checkGroupRight", "Select which energy
                                   source to view", c("All", energy),
                                   selected = "All")
@@ -130,6 +134,8 @@ ui <- navbarPage("CS 424 Project Two",
                            selected = "All"),
                checkboxGroupInput("checkGroupUS", "Select which energy source
                                   to view", c("All", energy)),
+               sliderInput("slider1", "Adjust energy values", min = 1, 
+                           max = 31097259, value = 15548630),
                h2("Do not worry if you see an error on the right screen. Select
                   one of the energy choices to display the leaflet map.")
              )
@@ -142,7 +148,8 @@ ui <- navbarPage("CS 424 Project Two",
     ),
     tabPanel("About",
              h1("Information about data"),
-             p("The data"),
+             p("The data consists of data on electrical power generation
+               throughout the US. The data is taken from the EPA"),
              br(),
              h2("Author of code"),
              p("The code for this Shiny App was written by Andres Tapia. At the time of this release,
@@ -184,36 +191,42 @@ server <- function(input, output, session) {
   PlantReactive2000 <- reactive({
     if (input$state3 == "All")
     {
-      egrid2000v3[egrid2000v3$Type %in% input$checkGroupUS,]
+      egrid2000v3[egrid2000v3$Type %in% input$checkGroupUS & 
+                    egrid2000v3$value > input$slider1,]
     }
     else
     {
       egrid2000v3[egrid2000v3$State == states[[input$state3]]
-                  & egrid2000v3$Type %in% input$checkGroupUS,]
+                  & egrid2000v3$Type %in% input$checkGroupUS
+                  & egrid2000v3$value > input$slider1,]
     }
   })
   
   PlantReactive2010 <- reactive({
     if (input$state3 == "All")
     {
-      egrid2010v3[egrid2010v3$Type %in% input$checkGroupUS,]
+      egrid2010v3[egrid2010v3$Type %in% input$checkGroupUS &
+                    egrid2010v3$value > input$slider1,]
     }
     else
     {
       egrid2010v3[egrid2010v3$State == states[[input$state3]]
-                  & egrid2010v3$Type %in% input$checkGroupUS,]
+                  & egrid2010v3$Type %in% input$checkGroupUS
+                  & egrid2010v3$value > input$slider1,]
     }
   })
   
   PlantReactive2018 <- reactive({
     if (input$state3 == "All")
     {
-      egrid2018v3[egrid2018v3$Type %in% input$checkGroupUS,]
+      egrid2018v3[egrid2018v3$Type %in% input$checkGroupUS &
+                    egrid2018v3$value > input$slider1,]
     }
     else
     {
       egrid2018v3[egrid2018v3$State == states[[input$state3]]
-                  & egrid2018v3$Type %in% input$checkGroupUS,]
+                  & egrid2018v3$Type %in% input$checkGroupUS &
+                    egrid2018v3$value > input$slider1,]
     }
   })
   ### ####
@@ -322,7 +335,18 @@ server <- function(input, output, session) {
                                selected = c("All", energy))
     }
     map <- leaflet(plantData)
-    map <- addTiles(map)
+    if (input$mapType1 == "Default")
+    {
+      map <- addTiles(map)
+    }
+    else if (input$mapType1 == "Gray")
+    {
+      map <- addProviderTiles(map, providers$CartoDB.Positron)
+    }
+    else if (input$mapType1 == "Color")
+    {
+      map <- addProviderTiles(map, providers$Esri.NatGeoWorldMap)
+    }
     map <- addCircles(map,
                       lng = plantData$Longitude,
                       lat = plantData$Latitude,
@@ -345,7 +369,18 @@ server <- function(input, output, session) {
                                selected = c("All", energy))
     }
     map <- leaflet(plantData)
-    map <- addTiles(map)
+    if (input$mapType2 == "Default")
+    {
+      map <- addTiles(map)
+    }
+    else if (input$mapType2 == "Gray")
+    {
+      map <- addProviderTiles(map, providers$CartoDB.Positron)
+    }
+    else if (input$mapType2 == "Color")
+    {
+      map <- addProviderTiles(map, providers$Esri.NatGeoWorldMap)
+    }
     map <- addCircles(map,
                       lng = plantData$Longitude,
                       lat = plantData$Latitude,
@@ -375,12 +410,12 @@ server <- function(input, output, session) {
                       color = colorFactors(plantData$Type),
                       popup = paste("Value:", plantData$value, "MWh <br>",
                                     "Name:", plantData$Name, "<br>",
-                                    "Type of Energy:", plantData$Type))
+                                    "Type of Energy:", plantData$Type, "<br>",
+                                    "State:", plantData$State))
     map <- addResetMapButton(map)
     map <- addLegend(map, "topright", colorFactors, values = plantData$Type)
     map
   })
-  
 }
 
 shinyApp(ui = ui, server = server)
