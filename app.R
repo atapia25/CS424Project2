@@ -66,6 +66,7 @@ years <- c(2000, 2010, 2018)
 
 allStates <- state.name
 states <- setNames(as.list(state.abb), state.name)
+reverseStates <- setNames(as.list(state.name), state.abb)
 
 ui <- navbarPage("CS 424 Project Two",
     tabPanel("Map of Plants in Illinois",
@@ -134,8 +135,12 @@ ui <- navbarPage("CS 424 Project Two",
                            selected = "All"),
                checkboxGroupInput("checkGroupUS", "Select which energy source
                                   to view", c("All", energy)),
-               sliderInput("slider1", "Adjust energy values", min = 1, 
-                           max = 31097259, value = 15548630),
+               sliderInput("slider1", "Adjust value to view plants that
+                           generate energy more than n MWh", min = 1, 
+                           max = 31097259, value = 1),
+               sliderInput("slider2", "Adjust value to view plants that
+                           generate energy less than n MWh", min = 1, 
+                           max = 31097259, value = 31097259),
                h2("Do not worry if you see an error on the right screen. Select
                   one of the energy choices to display the leaflet map.")
              )
@@ -159,7 +164,6 @@ ui <- navbarPage("CS 424 Project Two",
 )
 
 server <- function(input, output, session) {
-  
   
   ### Part 1 Data ###
   #Illinois map
@@ -192,13 +196,15 @@ server <- function(input, output, session) {
     if (input$state3 == "All")
     {
       egrid2000v3[egrid2000v3$Type %in% input$checkGroupUS & 
-                    egrid2000v3$value > input$slider1,]
+                    egrid2000v3$value > input$slider1 &
+                    egrid2000v3$value < input$slider2,]
     }
     else
     {
       egrid2000v3[egrid2000v3$State == states[[input$state3]]
                   & egrid2000v3$Type %in% input$checkGroupUS
-                  & egrid2000v3$value > input$slider1,]
+                  & egrid2000v3$value > input$slider1
+                  & egrid2000v3$value < input$slider2,]
     }
   })
   
@@ -206,13 +212,15 @@ server <- function(input, output, session) {
     if (input$state3 == "All")
     {
       egrid2010v3[egrid2010v3$Type %in% input$checkGroupUS &
-                    egrid2010v3$value > input$slider1,]
+                    egrid2010v3$value > input$slider1 &
+                    egrid2010v3$value < input$slider2,]
     }
     else
     {
       egrid2010v3[egrid2010v3$State == states[[input$state3]]
                   & egrid2010v3$Type %in% input$checkGroupUS
-                  & egrid2010v3$value > input$slider1,]
+                  & egrid2010v3$value > input$slider1
+                  & egrid2010v3$value < input$slider2,]
     }
   })
   
